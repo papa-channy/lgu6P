@@ -174,3 +174,6 @@ cython_debug/
 .pypirc
 
 dataset/
+chapter10/bc_card_out2020_03.txt
+chapter10/bc_card_output.txt
+chapter10/bc_card.txt
