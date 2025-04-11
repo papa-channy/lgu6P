@@ -1,31 +1,51 @@
-read -p "Enter the commit message: " commit_message
-timestamp=$(date +"%Y-%m-%d %H:%M")
+#!/bin/bash
+
+# 🌍 현재 시간 (KST 기준)
+current_time=$(TZ=Asia/Seoul date "+%Y-%m-%d %H:%M:%S")
+
+# 🌱 현재 브랜치
 branch=$(git rev-parse --abbrev-ref HEAD)
-# 현재 브랜치 확인
-if [ -z "$branch" ]; then
-  echo "❌ 현재 브랜치를 확인할 수 없습니다. git 저장소가 아닐 수 있습니다."
-  exit 1
+
+# 💻 운영체제 및 버전 감지
+if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+    if [ -f /etc/os-release ]; then
+        . /etc/os-release
+        os_type="$NAME $VERSION"
+    else
+        os_type="Linux (Unknown Version)"
+    fi
+elif [[ "$OSTYPE" == "darwin"* ]]; then
+    os_type="macOS $(sw_vers -productVersion)"
+elif [[ "$OSTYPE" == "cygwin" || "$OSTYPE" == "msys" || "$OSTYPE" == "win32" ]]; then
+    if command -v systeminfo &> /dev/null; then
+        win_version=$(systeminfo | grep -E "^OS Name|^OS Version" | tr '\n' ' ' | sed 's/^.*OS Name: //; s/ OS Version:/ \(/; s/$/\)/')
+        os_type="Windows $win_version"
+    else
+        os_type="Windows (Version Unknown)"
+    fi
+else
+    os_type="Unknown OS"
 fi
-echo "🔄 현재 브랜치: $branch  "
-# 변경사항 보여주기
-echo "🔍 변경된 파일들:"
+
+# 🔍 변경된 파일들 미리 보여주기
+echo "🔍 변경된 파일:"
 git status -s
 echo ""
 
-# 커밋 메시지 입력 받기
-read -p "📝 커밋 메시지를 입력하세요 (비우면 기본 메시지 사용): " msg
-
-# 기본 메시지 설정
-if [ -z "$msg" ]; then
-  msg="자동 커밋"
+# 📝 커밋 메시지 받기
+read -p "📝 커밋 메시지를 입력하세요 (비워두면 '자동 커밋'): " user_message
+if [ -z "$user_message" ]; then
+    user_message="자동 커밋"
 fi
 
-# 최종 메시지 구성
-commit_msg="🚀 [$branch] $timestamp - $msg"
+# 📦 최종 커밋 메시지
+commit_message="🚀 [$branch] $user_message | $current_time (KST) | $os_type"
 
-# git 명령어 실행
+# Git 명령어 실행
 git add .
-git commit -m "$commit_msg"
+git commit -m "$commit_message"
 git push
 
-echo "✅ 푸시 완료: $commit_msg"
+echo ""
+echo "✅ 커밋 완료!"
+echo "$commit_message"
